@@ -57,7 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
       emojiSpan.addEventListener('mouseenter', () => {
         hoveredEmoji = emoji; // Set hovered emoji
         const size = sizeSelect.value;
-        emojiSpan.title = `Left-click: Copy text\nRight-click: Download ${size}x${size} square PNG sprite\nAlt+X: Change page favicon`;
+        emojiSpan.title = `Left-click: Copy text\nRight-click: Download ${size}x${size} square PNG sprite\nAlt+X: Copy favicon HTML snippet`;
       });
       emojiSpan.addEventListener('mouseleave', () => {
         hoveredEmoji = null; // Clear hovered emoji
@@ -117,15 +117,18 @@ document.addEventListener('DOMContentLoaded', () => {
     showToast(`Saved ${targetSize}x${targetSize} square PNG! 💾`);
   }
 
-  function updatePageFavicon(emojiChar) {
-    let link = document.querySelector("link[rel*='icon']") || document.createElement('link');
-    link.type = 'image/svg+xml';
-    link.rel = 'icon';
-    // Encode the emoji character for safe inclusion in the SVG data URL
+  function copyFaviconHtmlSnippet(emojiChar) {
     const encodedEmoji = encodeURIComponent(emojiChar);
-    link.href = `data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>${encodedEmoji}</text></svg>`;
-    document.head.appendChild(link);
-    showToast(`Favicon updated to ${emojiChar}! ✨`);
+    const snippet = `<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>${encodedEmoji}</text></svg>">`;
+
+    copyTextToClipboard(snippet)
+      .then(() => {
+        showToast(`Favicon HTML snippet copied! ${emojiChar} ✨`);
+      })
+      .catch(err => {
+        console.error("Failed to copy favicon snippet:", err);
+        showToast('Failed to copy favicon snippet.');
+      });
   }
 
   document.addEventListener('keydown', (e) => {
@@ -133,9 +136,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (e.altKey && e.key === 'x') {
       e.preventDefault(); // Prevent default browser action (e.g., closing window/tab on some systems)
       if (hoveredEmoji) {
-        updatePageFavicon(hoveredEmoji.native);
+        copyFaviconHtmlSnippet(hoveredEmoji.native);
       } else {
-        showToast('Hover over an emoji first to change the favicon!');
+        showToast('Hover over an emoji first to copy the favicon snippet!');
       }
     }
   });
