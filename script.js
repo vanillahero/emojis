@@ -137,8 +137,8 @@ async function downloadFaviconICO(emojiChar, emojiId) {
   }
 
   try {
-    // ICO.write expects an array of ImageBitmaps, ImageElements, Canvases or Blobs
-    const icoBlob = await ICO.write(canvases);
+    // Correct usage: instantiate ICO and then call the write method
+    const icoBlob = await new ICO().write(canvases); 
     const url = URL.createObjectURL(icoBlob);
     const link = document.createElement('a');
     link.download = `favicon.ico`;
@@ -154,6 +154,7 @@ async function downloadFaviconICO(emojiChar, emojiId) {
     showToast(`Failed to create .ico file: ${err.message || 'Unknown error during ICO generation'}`);
   }
 }
+
 
 
   document.addEventListener('keydown', (e) => {
