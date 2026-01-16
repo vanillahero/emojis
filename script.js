@@ -117,41 +117,44 @@ document.addEventListener('DOMContentLoaded', () => {
     showToast(`Saved ${targetSize}x${targetSize} square PNG! 💾`);
   }
 
-  async function downloadFaviconICO(emojiChar, emojiId) {
-    const faviconSizes = [16, 24, 32, 48, 64]; // Common favicon sizes
-    const pngBlobs = [];
+async function downloadFaviconICO(emojiChar, emojiId) {
+  const faviconSizes = [16, 24, 32, 48, 64]; // Common favicon sizes
+  const canvases = []; // Store canvases directly
 
-    for (const size of faviconSizes) {
-      const canvas = drawEmojiToCanvas(emojiChar, size);
-      // Convert canvas to Blob
-      const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
-      if (blob) {
-        pngBlobs.push(blob);
-      }
-    }
-
-    if (pngBlobs.length === 0) {
-      showToast('Error creating favicon images.');
-      return;
-    }
-
-    try {
-      // ICO.write expects an array of ImageBitmaps, ImageElements, Canvases or Blobs
-      const icoBlob = await ICO.write(pngBlobs);
-      const url = URL.createObjectURL(icoBlob);
-      const link = document.createElement('a');
-      link.download = `favicon.ico`;
-      link.href = url;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url); // Clean up the object URL
-      showToast(`Saved favicon.ico for ${emojiChar}! ✨`);
-    } catch (err) {
-      console.error('Error generating ICO:', err);
-      showToast('Failed to create .ico file.');
+  for (const size of faviconSizes) {
+    const canvas = drawEmojiToCanvas(emojiChar, size);
+    if (canvas) {
+      canvases.push(canvas);
+    } else {
+      console.warn(`Failed to create canvas for size ${size} for emoji ${emojiChar}`);
     }
   }
+
+  if (canvases.length === 0) {
+    showToast('Error: No canvas images could be created for the favicon.');
+    console.error('No canvases were successfully created for ICO generation.');
+    return;
+  }
+
+  try {
+    // ICO.write expects an array of ImageBitmaps, ImageElements, Canvases or Blobs
+    const icoBlob = await ICO.write(canvases);
+    const url = URL.createObjectURL(icoBlob);
+    const link = document.createElement('a');
+    link.download = `favicon.ico`;
+    link.href = url;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url); // Clean up the object URL
+
+    showToast(`Saved favicon.ico for ${emojiChar}! ✨`);
+  } catch (err) {
+    console.error('Error generating ICO:', err);
+    showToast(`Failed to create .ico file: ${err.message || 'Unknown error during ICO generation'}`);
+  }
+}
+
 
   document.addEventListener('keydown', (e) => {
     // Check for Alt + X (key 'x', altKey true)
