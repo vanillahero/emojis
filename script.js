@@ -57,7 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
       emojiSpan.addEventListener('mouseenter', () => {
         hoveredEmoji = emoji; // Set hovered emoji
         const size = sizeSelect.value;
-        emojiSpan.title = `Left-click: Copy text\nRight-click: Download ${size}x${size} square PNG sprite\nAlt+X: Download as favicon.ico`;
+        emojiSpan.title = `Left-click: Copy text\nRight-click: Download ${size}x${size} square PNG sprite\nAlt+X: Change page favicon`;
       });
       emojiSpan.addEventListener('mouseleave', () => {
         hoveredEmoji = null; // Clear hovered emoji
@@ -117,54 +117,25 @@ document.addEventListener('DOMContentLoaded', () => {
     showToast(`Saved ${targetSize}x${targetSize} square PNG! 💾`);
   }
 
-async function downloadFaviconICO(emojiChar, emojiId) {
-  const faviconSizes = [16, 24, 32, 48, 64]; // Common favicon sizes
-  const canvases = []; // Store canvases directly
-
-  for (const size of faviconSizes) {
-    const canvas = drawEmojiToCanvas(emojiChar, size);
-    if (canvas) {
-      canvases.push(canvas);
-    } else {
-      console.warn(`Failed to create canvas for size ${size} for emoji ${emojiChar}`);
-    }
+  function updatePageFavicon(emojiChar) {
+    let link = document.querySelector("link[rel*='icon']") || document.createElement('link');
+    link.type = 'image/svg+xml';
+    link.rel = 'icon';
+    // Encode the emoji character for safe inclusion in the SVG data URL
+    const encodedEmoji = encodeURIComponent(emojiChar);
+    link.href = `data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>${encodedEmoji}</text></svg>`;
+    document.head.appendChild(link);
+    showToast(`Favicon updated to ${emojiChar}! ✨`);
   }
-
-  if (canvases.length === 0) {
-    showToast('Error: No canvas images could be created for the favicon.');
-    console.error('No canvases were successfully created for ICO generation.');
-    return;
-  }
-
-  try {
-    // Correct usage: call ICO.write directly as a static method
-    const icoBlob = await ICO.write(canvases); 
-    const url = URL.createObjectURL(icoBlob);
-    const link = document.createElement('a');
-    link.download = `favicon.ico`;
-    link.href = url;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url); // Clean up the object URL
-
-    showToast(`Saved favicon.ico for ${emojiChar}! ✨`);
-  } catch (err) {
-    console.error('Error generating ICO:', err);
-    showToast(`Failed to create .ico file: ${err.message || 'Unknown error during ICO generation'}`);
-  }
-}
-
-
 
   document.addEventListener('keydown', (e) => {
     // Check for Alt + X (key 'x', altKey true)
     if (e.altKey && e.key === 'x') {
       e.preventDefault(); // Prevent default browser action (e.g., closing window/tab on some systems)
       if (hoveredEmoji) {
-        downloadFaviconICO(hoveredEmoji.native, hoveredEmoji.id);
+        updatePageFavicon(hoveredEmoji.native);
       } else {
-        showToast('Hover over an emoji first to save as favicon.ico!');
+        showToast('Hover over an emoji first to change the favicon!');
       }
     }
   });
