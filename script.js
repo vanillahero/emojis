@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let emojis = [];
   const SYSTEM_FONT_STACK = '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif';
   let toastTimeout;
+  let hoveredEmoji = null; // Stores the emoji object (native, id) currently hovered
 
   function copyTextToClipboard(text) {
     if (navigator.clipboard && window.isSecureContext) {
@@ -54,8 +55,12 @@ document.addEventListener('DOMContentLoaded', () => {
       emojiSpan.className = 'emoji';
       emojiSpan.textContent = emoji.native;
       emojiSpan.addEventListener('mouseenter', () => {
+        hoveredEmoji = emoji; // Set hovered emoji
         const size = sizeSelect.value;
-        emojiSpan.title = `Left-click: Copy text\nRight-click: Download ${size}x${size} square sprite`;
+        emojiSpan.title = `Left-click: Copy text\nRight-click: Download ${size}x${size} square PNG sprite\nAlt+X: Download as favicon.ico`;
+      });
+      emojiSpan.addEventListener('mouseleave', () => {
+        hoveredEmoji = null; // Clear hovered emoji
       });
       emojiSpan.addEventListener('click', () => {
         copyTextToClipboard(emoji.native).then(() => {
@@ -81,21 +86,27 @@ document.addEventListener('DOMContentLoaded', () => {
     displayEmojis(filteredEmojis);
   });
 
-  function downloadSprite(emojiChar, filename) {
-    const targetSize = parseInt(sizeSelect.value);
+  function drawEmojiToCanvas(emojiChar, size) {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
-    canvas.width = targetSize;
-    canvas.height = targetSize;
-    ctx.clearRect(0, 0, targetSize, targetSize);
-    const fontSize = Math.floor(targetSize * 0.85);
+    canvas.width = size;
+    canvas.height = size;
+    ctx.clearRect(0, 0, size, size);
+    const fontSize = Math.floor(size * 0.85);
     ctx.font = `${fontSize}px ${SYSTEM_FONT_STACK}`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    const centerX = targetSize / 2;
-    const centerY = targetSize / 2;
-    const verticalAdjustment = targetSize * 0.05;
+    const centerX = size / 2;
+    const centerY = size / 2;
+    // Adjust for typical emoji vertical alignment
+    const verticalAdjustment = size * 0.05;
     ctx.fillText(emojiChar, centerX, centerY + verticalAdjustment);
+    return canvas;
+  }
+
+  function downloadSprite(emojiChar, filename) {
+    const targetSize = parseInt(sizeSelect.value);
+    const canvas = drawEmojiToCanvas(emojiChar, targetSize);
     const dataUrl = canvas.toDataURL('image/png');
     const link = document.createElement('a');
     link.download = `${filename}_${targetSize}x${targetSize}.png`;
@@ -103,8 +114,56 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    showToast(`Saved ${targetSize}x${targetSize} square sprite! 💾`);
+    showToast(`Saved ${targetSize}x${targetSize} square PNG! 💾`);
   }
+
+  async function downloadFaviconICO(emojiChar, emojiId) {
+    const faviconSizes = [16, 24, 32, 48, 64]; // Common favicon sizes
+    const pngBlobs = [];
+
+    for (const size of faviconSizes) {
+      const canvas = drawEmojiToCanvas(emojiChar, size);
+      // Convert canvas to Blob
+      const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+      if (blob) {
+        pngBlobs.push(blob);
+      }
+    }
+
+    if (pngBlobs.length === 0) {
+      showToast('Error creating favicon images.');
+      return;
+    }
+
+    try {
+      // ICO.write expects an array of ImageBitmaps, ImageElements, Canvases or Blobs
+      const icoBlob = await ICO.write(pngBlobs);
+      const url = URL.createObjectURL(icoBlob);
+      const link = document.createElement('a');
+      link.download = `favicon.ico`;
+      link.href = url;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url); // Clean up the object URL
+      showToast(`Saved favicon.ico for ${emojiChar}! ✨`);
+    } catch (err) {
+      console.error('Error generating ICO:', err);
+      showToast('Failed to create .ico file.');
+    }
+  }
+
+  document.addEventListener('keydown', (e) => {
+    // Check for Alt + X (key 'x', altKey true)
+    if (e.altKey && e.key === 'x') {
+      e.preventDefault(); // Prevent default browser action (e.g., closing window/tab on some systems)
+      if (hoveredEmoji) {
+        downloadFaviconICO(hoveredEmoji.native, hoveredEmoji.id);
+      } else {
+        showToast('Hover over an emoji first to save as favicon.ico!');
+      }
+    }
+  });
 
   function showToast(message) {
     toast.textContent = message;
