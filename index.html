@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emojis</title>
+    <link rel="stylesheet" href="style.css">
+  </head>
+  <body>
+    <div class="container">
+      <p>Left-click: Copy emoji to clipboard 📋 <br> <strong>Right-click: Download centered square sprite 💾</strong></p>
+      <div class="controls">
+        <input type="text" id="search" placeholder="Search emojis...">
+        <select id="size-select" title="Select sprite size">
+          <option value="16">16 px</option>
+          <option value="32">32 px</option>
+          <option value="64" selected>64 px</option>
+          <option value="128">128 px</option>
+          <option value="256">256 px</option>
+          <option value="512">512 px</option>
+          <option value="1024">1024 px</option>
+        </select>
+      </div>
+      <div id="emoji-grid"></div>
+    </div>
+    <div class="toast" id="toast">Copied!</div>
+    <script src="script.js" defer></script>
+  </body>
+</html>
