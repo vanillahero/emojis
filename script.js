@@ -137,8 +137,8 @@ async function downloadFaviconICO(emojiChar, emojiId) {
   }
 
   try {
-    // Correct usage: instantiate ICO and then call the write method
-    const icoBlob = await new ICO().write(canvases); 
+    // Correct usage: call ICO.write directly as a static method
+    const icoBlob = await ICO.write(canvases); 
     const url = URL.createObjectURL(icoBlob);
     const link = document.createElement('a');
     link.download = `favicon.ico`;
