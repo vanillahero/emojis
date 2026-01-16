@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let emojis = [];
   const SYSTEM_FONT_STACK = '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif';
   let toastTimeout;
-  let hoveredEmoji = null; // Stores the emoji object (native, id) currently hovered
+  let hoveredEmoji = null;
 
   function copyTextToClipboard(text) {
     if (navigator.clipboard && window.isSecureContext) {
@@ -55,12 +55,12 @@ document.addEventListener('DOMContentLoaded', () => {
       emojiSpan.className = 'emoji';
       emojiSpan.textContent = emoji.native;
       emojiSpan.addEventListener('mouseenter', () => {
-        hoveredEmoji = emoji; // Set hovered emoji
+        hoveredEmoji = emoji;
         const size = sizeSelect.value;
         emojiSpan.title = `Left-click: Copy text\nRight-click: Download ${size}x${size} square PNG sprite\nAlt+X: Copy favicon HTML snippet`;
       });
       emojiSpan.addEventListener('mouseleave', () => {
-        hoveredEmoji = null; // Clear hovered emoji
+        hoveredEmoji = null;
       });
       emojiSpan.addEventListener('click', () => {
         copyTextToClipboard(emoji.native).then(() => {
@@ -98,7 +98,6 @@ document.addEventListener('DOMContentLoaded', () => {
     ctx.textBaseline = 'middle';
     const centerX = size / 2;
     const centerY = size / 2;
-    // Adjust for typical emoji vertical alignment
     const verticalAdjustment = size * 0.05;
     ctx.fillText(emojiChar, centerX, centerY + verticalAdjustment);
     return canvas;
@@ -120,7 +119,6 @@ document.addEventListener('DOMContentLoaded', () => {
   function copyFaviconHtmlSnippet(emojiChar) {
     const encodedEmoji = encodeURIComponent(emojiChar);
     const snippet = `<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>${encodedEmoji}</text></svg>">`;
-
     copyTextToClipboard(snippet)
       .then(() => {
         showToast(`Favicon HTML snippet copied! ${emojiChar} ✨`);
@@ -130,11 +128,9 @@ document.addEventListener('DOMContentLoaded', () => {
         showToast('Failed to copy favicon snippet.');
       });
   }
-
   document.addEventListener('keydown', (e) => {
-    // Check for Alt + X (key 'x', altKey true)
     if (e.altKey && e.key === 'x') {
-      e.preventDefault(); // Prevent default browser action (e.g., closing window/tab on some systems)
+      e.preventDefault();
       if (hoveredEmoji) {
         copyFaviconHtmlSnippet(hoveredEmoji.native);
       } else {
