@@ -118,7 +118,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function copyFaviconHtmlSnippet(emojiChar) {
     const encodedEmoji = encodeURIComponent(emojiChar);
-    const snippet = `<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>${encodedEmoji}</text></svg>">`;
+    const snippet = `<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text x=%2250%22 y=%2275%22 font-size=%2280%22 text-anchor=%22middle%22>${encodedEmoji}</text></svg>">`;
     copyTextToClipboard(snippet)
       .then(() => {
         showToast(`Favicon HTML snippet copied! ${emojiChar} ✨`);
@@ -128,6 +128,8 @@ document.addEventListener('DOMContentLoaded', () => {
         showToast('Failed to copy favicon snippet.');
       });
   }
+
+
   document.addEventListener('keydown', (e) => {
     if (e.altKey && e.key === 'x') {
       e.preventDefault();
